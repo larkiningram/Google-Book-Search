@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import Jumbotron from "../components/Jumbotron";
-import DeleteBtn from "../components/DeleteBtn";
+// import DeleteBtn from "../components/DeleteBtn";
+import SaveBtn from "../components/SaveBtn";
 import { Col, Row, Container } from "../components/Grid";
 import { List, ListItem } from "../components/List";
 import { Input, FormBtn } from "../components/Form";
@@ -9,6 +10,7 @@ import API from "../utils/API"
 class Search extends Component {
   // Initialize this.state.books as an empty array
   state = {
+    savedBooks: [],
     books: [],
     title: "",
     author: "",
@@ -17,11 +19,10 @@ class Search extends Component {
     link: ""
   };
 
-  // var query = this.state.title;
   findBook = (query) => {
     console.log(query)
     API.getGoogleSearchBooks(query)
-      .then(res => { this.setState({ books: res.data.items, title: "", author: ""}); console.log(res.data.items) }
+      .then(res => { this.setState({ books: res.data.items, title: "", author: "" }); console.log(res.data.items) }
       )
       .catch(err => console.log(err));
   };
@@ -35,27 +36,15 @@ class Search extends Component {
 
   handleFormSubmit = event => {
     event.preventDefault();
-    this.findBook(this.state.title);
-    // this.populateResults()
-    // API.saveBook()
-    // .then()
-
+    this.findBook(this.state.title || this.state.author);
   }
 
-  // populateResults = () => {
-  //     this.state.books.map(book => console.log(book)
-  //     //   (
-  //     //   <ListItem key={book._id}>
-  //     //     <a href={"/books/" + book._id}>
-  //     //       <strong>
-  //     //         {book.title} by {book.author}
-  //     //       </strong>
-  //     //     </a>
-  //     //     <DeleteBtn />
-  //     //   </ListItem>
-  //     // )
-  //     )
-  // }
+  saveThisBook = event => {
+    event.preventDefault()
+    let savedBooks = this.state.books.filter(book => book.id === event.target.id)
+    savedBooks = savedBooks[0];
+    API.saveBook(savedBooks).then(res => { this.setState({ savedBooks: res.data.items }); console.log(this.state.savedBooks) })
+  }
 
   render() {
     return (
@@ -70,16 +59,16 @@ class Search extends Component {
                 value={this.state.title}
                 onChange={this.handleInputChange}
                 name="title"
-                placeholder="Title (required)"
+                placeholder="Title"
               />
               <Input
                 value={this.state.author}
                 onChange={this.handleInputChange}
                 name="author"
-                placeholder="Author (required)"
+                placeholder="Author"
               />
               <FormBtn
-                disabled={!(this.state.author && this.state.title)}
+                // disabled={!(this.state.author && this.state.title)}
                 onClick={this.handleFormSubmit}
               >
                 Submit Book
@@ -93,19 +82,24 @@ class Search extends Component {
               <List>
                 {this.state.books.map(book => (
                   <ListItem key={book.id}>
-                    <a href={"/books/" + book.id}>
+                    {/* <a href={"/books/" + book.id}> */}
                       <strong>
                         {book.volumeInfo.title} by {book.volumeInfo.authors[0]}
                       </strong>
-                    </a>
-                    <DeleteBtn />
+                    {/* </a> */}
+                    <SaveBtn onClick={this.saveThisBook} />
                     <br></br>
-                    <img src={book.volumeInfo.imageLinks.thumbnail} alt={book.volumeInfo.title}></img>
-                    <br></br>
-                    Description: {book.volumeInfo.description}
-                    <br></br>
-                    <a href={book.volumeInfo.infoLink}>Link to book info</a>
-
+                    <div className="row">
+                      <Col size="md-2">
+                        <img src={book.volumeInfo.imageLinks.thumbnail} alt={book.volumeInfo.title}></img>
+                        <br></br>
+                      </Col>
+                      <Col size="md-9">
+                        {book.volumeInfo.description}
+                        <br></br>
+                        <a href={book.volumeInfo.infoLink}>Link to book info</a>
+                      </Col>
+                    </div>
                   </ListItem>
                 ))}
               </List>
