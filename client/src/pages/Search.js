@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import Jumbotron from "../components/Jumbotron";
-// import DeleteBtn from "../components/DeleteBtn";
 import SaveBtn from "../components/SaveBtn";
 import { Col, Row, Container } from "../components/Grid";
 import { List, ListItem } from "../components/List";
@@ -34,9 +33,37 @@ class Search extends Component {
     });
   }
 
+  //function to control the submit button of the search form 
   handleFormSubmit = event => {
     event.preventDefault();
-    this.findBook(this.state.title || this.state.author);
+    // once it clicks it connects to the google book api with the search value
+    API.getGoogleSearchBooks(this.state.title || this.state.author)
+      .then(res => {
+        if (res.data.items === "error") {
+          throw new Error(res.data.items);
+        }
+        else {
+          // store response in a array
+          let results = res.data.items
+          //map through the array 
+          results = results.map(result => {
+            //store each book information in a new object 
+            result = {
+              key: result.id,
+              id: result.id,
+              title: result.volumeInfo.title,
+              author: result.volumeInfo.authors,
+              description: result.volumeInfo.description,
+              image: result.volumeInfo.imageLinks.thumbnail,
+              link: result.volumeInfo.infoLink
+            }
+            return result;
+          })
+          // reset the sate of the empty books array to the new arrays of objects with properties geting back from the response
+          this.setState({ books: results })
+        }
+      })
+      .catch(err => console.log(err));
   }
 
   saveThisBook = event => {
@@ -68,7 +95,6 @@ class Search extends Component {
                 placeholder="Author"
               />
               <FormBtn
-                // disabled={!(this.state.author && this.state.title)}
                 onClick={this.handleFormSubmit}
               >
                 Submit Book
@@ -83,21 +109,21 @@ class Search extends Component {
                 {this.state.books.map(book => (
                   <ListItem key={book.id}>
                     {/* <a href={"/books/" + book.id}> */}
-                      <strong>
-                        {book.volumeInfo.title} by {book.volumeInfo.authors[0]}
-                      </strong>
+                    <strong>
+                      {book.title} by {book.author}
+                    </strong>
                     {/* </a> */}
                     <SaveBtn onClick={this.saveThisBook} />
                     <br></br>
                     <div className="row">
                       <Col size="md-2">
-                        <img src={book.volumeInfo.imageLinks.thumbnail} alt={book.volumeInfo.title}></img>
+                        <img src={book.image} alt={book.title}></img>
                         <br></br>
                       </Col>
                       <Col size="md-9">
-                        {book.volumeInfo.description}
+                        {book.description}
                         <br></br>
-                        <a href={book.volumeInfo.infoLink}>Link to book info</a>
+                        <a href={book.link}>Link to book info</a>
                       </Col>
                     </div>
                   </ListItem>
