@@ -1,7 +1,5 @@
 import axios from "axios";
 
-// const APIkey = "AIzaSyBrZWHSapyGBjEzWCPyOGuFgFpcK5Xk1W0";
-
 export default {
   getGoogleSearchBooks: function (query) {
     return axios.get("https://www.googleapis.com/books/v1/volumes?q=" + query)
